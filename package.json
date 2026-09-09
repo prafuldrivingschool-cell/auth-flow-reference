@@ -1,0 +1,15 @@
+{
+  "name": "auth-flow-reference",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Educational reference implementation for a secure access-token and refresh-token authentication flow.",
+  "type": "module",
+  "scripts": {
+    "start": "node backend/server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2"
+  }
+}
