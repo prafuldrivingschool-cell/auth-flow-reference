@@ -1,1 +1,39 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Captcha Assist Test</title><style>body{font:16px system-ui;max-width:700px;margin:40px auto;padding:20px}section{border:1px solid #ccc;padding:20px;margin:20px 0}canvas{image-rendering:pixelated;border:1px solid #888}button,input{padding:8px;margin:5px}</style></head><body><h1>Captcha Assist Test Page</h1><p>This page is for local extension testing. It intentionally does not implement real CAPTCHA verification.</p><section><label for="captcha1">Captcha :</label><input id="captcha1" placeholder="Enter Captcha Here" autocomplete="off"><div><canvas id="image1" width="240" height="80"></canvas></div><button id="refresh1">Refresh CAPTCHA</button></section><button id="add">Add CAPTCHA dynamically</button><script>"use strict";function draw(id){const c=document.getElementById(id),x=c.getContext('2d');x.fillStyle='#eee';x.fillRect(0,0,c.width,c.height);x.fillStyle='#111';x.font='bold 38px sans-serif';const s=Math.random().toString(36).slice(2,8).toUpperCase();x.rotate((Math.random()-.5)/8);x.fillText(s,35,52);for(let i=0;i<9;i++){x.strokeStyle='#555';x.beginPath();x.moveTo(Math.random()*240,Math.random()*80);x.lineTo(Math.random()*240,Math.random()*80);x.stroke();}x.setTransform(1,0,0,1,0,0)}draw('image1');document.getElementById('refresh1').onclick=()=>draw('image1');document.getElementById('add').onclick=()=>{const n=document.createElement('section');n.innerHTML='<label>Security code</label><input placeholder="verification code"><img alt="captcha test" width="240" height="80">';document.body.appendChild(n);const c=document.createElement('canvas');c.width=240;c.height=80;c.style.display='none';document.body.appendChild(c);};</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Captcha Assist — Local OCR Demo</title>
+<style>
+body{font:16px system-ui;max-width:760px;margin:40px auto;padding:20px;background:#f7f7f7}section{background:#fff;border:1px solid #ccc;border-radius:12px;padding:20px;margin:20px 0}canvas{border:1px solid #888;max-width:100%}button,input{padding:9px;margin:5px 0;font:inherit}button{cursor:pointer}.note{font-size:14px;color:#555}.result{font:700 20px monospace;padding:12px;background:#eee;border-radius:8px;min-height:24px}
+</style></head>
+<body>
+<h1>Captcha Assist Test / Local OCR Demo</h1>
+<p class="note">This page is for local development. It does not connect to or verify against any real CAPTCHA service.</p>
+<section>
+<h2>1. Detection test</h2>
+<label for="captcha1">Demo verification field:</label><br>
+<input id="captcha1" placeholder="Enter demo verification text" autocomplete="off">
+<div><canvas id="image1" width="240" height="80"></canvas></div>
+<button id="refresh1">Refresh demo image</button>
+<p class="note">Use the Captcha Assist floating button here to test image detection, zoom, and enhancement. The extension must not automatically answer this field.</p>
+</section>
+<section>
+<h2>2. Local image-to-text demo</h2>
+<p class="note">This separate demo uses a clean, non-CAPTCHA image and a small local template matcher to demonstrate image-to-text processing.</p>
+<canvas id="ocrImage" width="360" height="100"></canvas><br>
+<button id="newOcr">Generate demo text image</button>
+<button id="runOcr">Run local OCR</button>
+<div id="ocrResult" class="result" aria-live="polite">—</div>
+</section>
+<section><h2>3. Dynamic detection test</h2><button id="add">Add demo verification field</button></section>
+<script>
+"use strict";
+function draw(id){const c=document.getElementById(id),x=c.getContext('2d');x.setTransform(1,0,0,1,0,0);x.fillStyle='#eee';x.fillRect(0,0,c.width,c.height);x.fillStyle='#111';x.font='bold 38px sans-serif';const s=Math.random().toString(36).slice(2,8).toUpperCase();x.fillText(s,35,52);for(let i=0;i<9;i++){x.strokeStyle='#555';x.beginPath();x.moveTo(Math.random()*240,Math.random()*80);x.lineTo(Math.random()*240,Math.random()*80);x.stroke();}}
+draw('image1');document.getElementById('refresh1').onclick=()=>draw('image1');
+const glyphs={A:['01110','10001','10001','11111','10001','10001','10001'],B:['11110','10001','10001','11110','10001','10001','11110'],C:['01111','10000','10000','10000','10000','10000','01111'],H:['10001','10001','10001','11111','10001','10001','10001'],K:['10001','10010','10100','11000','10100','10010','10001'],M:['10001','11011','10101','10101','10001','10001','10001'],N:['10001','11001','10101','10011','10001','10001','10001'],P:['11110','10001','10001','11110','10000','10000','10000'],R:['11110','10001','10001','11110','10100','10010','10001'],T:['11111','00100','00100','00100','00100','00100','00100'],W:['10001','10001','10001','10101','10101','11011','10001'],Z:['11111','00001','00010','00100','01000','10000','11111'],0:['01110','10001','10011','10101','11001','10001','01110'],1:['00100','01100','00100','00100','00100','00100','01110'],2:['01110','10001','00001','00010','00100','01000','11111'],3:['11110','00001','00001','01110','00001','00001','11110'],4:['00010','00110','01010','10010','11111','00010','00010'],5:['11111','10000','10000','11110','00001','00001','11110'],6:['01110','10000','10000','11110','10001','10001','01110'],7:['11111','00001','00010','00100','01000','01000','01000'],8:['01110','10001','10001','01110','10001','10001','01110'],9:['01110','10001','10001','01111','00001','00001','01110']};
+let demoText='';
+function renderDemo(){const c=document.getElementById('ocrImage'),x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);demoText=['A7K3R2','H4M8Z1','P6T2W9','C5N7B4'][Math.floor(Math.random()*4)];const scale=8,start=18;x.fillStyle='#111';for(let i=0;i<demoText.length;i++){const g=glyphs[demoText[i]],ox=start+i*55;for(let y=0;y<7;y++)for(let xx=0;xx<5;xx++)if(g[y][xx]==='1')x.fillRect(ox+xx*scale,15+y*scale,scale-1,scale-1);}}
+function recognizeDemo(){const c=document.getElementById('ocrImage'),x=c.getContext('2d'),d=x.getImageData(0,0,c.width,c.height).data;let out='';const scale=8,start=18;for(let i=0;i<demoText.length;i++){let best='?',bs=1e9;for(const [ch,g] of Object.entries(glyphs)){let err=0;for(let y=0;y<7;y++)for(let xx=0;xx<5;xx++){const px=start+i*55+xx*scale+3,py=15+y*scale+3,v=d[(py*c.width+px)*4]<128?1:0;err+=v!==+(g[y][xx]==='1');}if(err<bs){bs=err;best=ch;}}out+=best;}document.getElementById('ocrResult').textContent=out+'  (local demo)';}
+renderDemo();document.getElementById('newOcr').onclick=renderDemo;document.getElementById('runOcr').onclick=recognizeDemo;
+document.getElementById('add').onclick=()=>{const n=document.createElement('section');n.innerHTML='<label>Demo security code</label><br><input placeholder="demo verification code"><div><img alt="demo verification image" width="240" height="80"></div>';document.body.appendChild(n);};
+</script></body></html>
